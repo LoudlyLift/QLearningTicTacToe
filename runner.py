@@ -4,7 +4,7 @@ sys.path.insert(0, "Players")
 
 import qlearning
 import ttt
-import qtable
+import neural
 
 def comp_randact(episode):
         episode = max(episode, 1) # to avoid divide by zero
@@ -13,7 +13,8 @@ def comp_randact(episode):
         odds = min(odds, 1)
         return odds
 
-qlrn = qlearning.TFQLearning(ttt.TTT_vsRandoAI(), comp_randact, qtable.qtable, future_discount=0.75)
+qlrn = qlearning.TFQLearning(ttt.TTT_vsRandoAI(), comp_randact, neural.neural, future_discount=0.75)
 (player, results) = qlrn.runEpisodes(10000)
 print("Fin.")
 import pdb; pdb.set_trace()
+player.close()
