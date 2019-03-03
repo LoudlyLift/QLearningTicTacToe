@@ -1,16 +1,5 @@
 import numpy
 
-class Player:
-        def __init__(self, state_shape, num_actions):
-                pass
-
-        #finds the "row" of the Q-table corresponding to the given state
-        def computeQState(self, state):
-                pass
-
-        def updateQState(self, state, qValues):
-                pass
-
 class TFQLearning:
         """env must define these methods:
 
@@ -22,11 +11,15 @@ class TFQLearning:
             step(self, int): perform the specified move and return the tuple
                     (state_new,reward,done).
 
-            getStateShape(): returns a list of numbers. Each value represents
+            getStateShape(): returns a tuple of numbers. Each value represents
             the length of the state matrix in the corresponding
-            dimension. e.g. returning the value [2, 3, 4] indicates that state
-            of this environment is represented by 24 integers, in the shape of a
-            cube that has sides of length two, three, and four.
+            dimension. e.g. returning the value (2, 3, 4) indicates that state
+            of this environment is represented by 24 integers and that those
+            integers take the shape of a cube that has sides of length two,
+            three, and four.
+
+            getNumActions(): returns the number of actions that can be made at
+            any given time
 
         compute_randact(episode_num): given the episode number, this computes
         probability with which a random move should be made instead of action
@@ -45,15 +38,17 @@ class TFQLearning:
                 values.
 
         """
-        def __init__(self, env, compute_randact, player, future_discount=.99):
+        def __init__(self, env, compute_randact, cls_player, future_discount=.99):
                 self._env = env
-                self._player = player
+                state = self._env.reset()
+                state_shape = numpy.asarray(state).shape
+                self._player = cls_player(state_shape, self._env.getNumActions())
                 self._compute_randact = compute_randact
                 self._future_discount = future_discount
 
         # runs count episodes.
         #
-        # Returns [ Σ(episode i's rewards) for i in range(count) ]
+        # Returns (player, [ Σ(episode i's rewards) for i in range(count) ])
         def runEpisodes(self, count=1):
                 reward_sums = []
                 for ep_num in range(count):
@@ -70,12 +65,14 @@ class TFQLearning:
                                 else:
                                         act = numpy.argmax(allActQs)
                                 state_new,reward,done = self._env.step(act)
-                                maxHypotheticalQ = max(self._player.computeQState(stateNew))
-                                allActQ[act] = reward + future_discount * maxHypotheticalQ
-                                self._player.updateQState(stateOld, allActQ)
+                                maxHypotheticalQ = max(self._player.computeQState(state_new))
+                                allActQs[act] = reward + self._future_discount * maxHypotheticalQ
+                                self._player.updateQState(state_old, allActQs)
 
                                 reward_sum += reward
                                 state_old = state_new
                                 cStep += 1
+                        if (ep_num % 100 == 0):
+                                print("episode %5d: %f" % (ep_num, reward_sum))
                         reward_sums.append(reward_sum)
-                return reward_sums
+                return (self._player, reward_sums)

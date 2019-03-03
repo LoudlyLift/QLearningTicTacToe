@@ -1,3 +1,4 @@
+import numpy
 import enum
 
 class TTT:
@@ -47,7 +48,7 @@ class TTT:
                 self._played_moves = 0
                 self._isActive = True
                 self._victor = None
-                return self.get_board()
+                return self.getState()
 
         def __str__(self):
                 return f"{self.__dict__}"
@@ -66,7 +67,7 @@ class TTT:
                 self._played_moves += 1
                 if self._board[i] != None: # illegal moves are suicide
                         self._declare_win(not self._next_player)
-                        return (self.get_board(), -10, True)
+                        return (self.getState(), -10, True)
 
                 self._board[i] = self._next_player
 
@@ -75,19 +76,19 @@ class TTT:
                         values = list(map(lambda i: self._board[i], pattern))
                         if values[0] == values[1] and values[1] == values[2]:
                                 self._declare_win(self._next_player)
-                                return (self.get_board(), 1, True)
+                                return (self.getState(), 1, True)
 
                 # check for stalemate
                 if self._played_moves == TTT.BOARD_SIZE:
                         self._declare_tie()
-                        return (self.get_board(), 0.5, True)
+                        return (self.getState(), 0.5, True)
 
                 self._next_player = not self._next_player
 
-                return (self.get_board(), 0, False)
+                return (self.getState(), 0, False)
         step = make_move
 
-        def getRandomMove(self, i):
+        def getRandomMove(self):
                 assert(self._isActive)
                 num_possible = 9 - self._played_moves
                 assert(num_possible > 0)
@@ -121,13 +122,22 @@ class TTT:
         def getNextPlayer(self):
                 assert(self._isActive)
 
+        def getNumActions(self):
+                return TTT.BOARD_SIZE
+
+        @staticmethod
+        def playerToInt(player):
+                if player == None:
+                        return 0
+                return player + 1
 
         """Returns a list of numbers that represents the state of the game
         """
         def getState(self):
-                nones  = [ self._board[i] == None  for i in range(TTT.BOARD_SIZE) ]
-                falses = [ self._board[i] == False for i in range(TTT.BOARD_SIZE) ]
-                trues  = [ self._board[i] == True  for i in range(TTT.BOARD_SIZE) ]
-                state = nones + falses + trues # state as booleans
-                state = map(int, state)
-                return state
+                #nones  = [ self._board[i] == None  for i in range(TTT.BOARD_SIZE) ]
+                #falses = [ self._board[i] == False for i in range(TTT.BOARD_SIZE) ]
+                #trues  = [ self._board[i] == True  for i in range(TTT.BOARD_SIZE) ]
+                #state = nones + falses + trues # state as booleans
+                #state = map(int, state)
+                #return state
+                return list(map(TTT.playerToInt, self._board))
