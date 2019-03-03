@@ -72,7 +72,7 @@ class TFQLearning:
                                 reward_sum += reward
                                 state_old = state_new
                                 cStep += 1
-                        if (ep_num % 100 == 0):
-                                print("episode %5d: %f" % (ep_num, reward_sum))
+                        if (ep_num % 100 == 0 and ep_num != 0):
+                                print("episode %8d: %f" % (ep_num, numpy.mean(reward_sums[-100:-1])))
                         reward_sums.append(reward_sum)
                 return (self._player, reward_sums)

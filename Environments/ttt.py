@@ -61,7 +61,7 @@ class TTT:
                 self._isActive = False
                 self._victor = None
 
-        def make_move(self, i):
+        def makeMove(self, i):
                 if not self._isActive: # should never happen
                         raise IllegalMoveError("Game has already ended")
                 self._played_moves += 1
@@ -86,7 +86,7 @@ class TTT:
                 self._next_player = not self._next_player
 
                 return (self.getState(), 0, False)
-        step = make_move
+        step = makeMove
 
         def getRandomMove(self):
                 assert(self._isActive)
@@ -121,6 +121,7 @@ class TTT:
         """Assuming the game is not over, returns the player who is to play next"""
         def getNextPlayer(self):
                 assert(self._isActive)
+                return self._next_player
 
         def getNumActions(self):
                 return TTT.BOARD_SIZE
@@ -141,3 +142,24 @@ class TTT:
                 #state = map(int, state)
                 #return state
                 return list(map(TTT.playerToInt, self._board))
+
+class TTT_vsRandoAI(TTT):
+        def step(self, i):
+                assert(self._isActive)
+                plr = self._next_player
+
+                #AI's move
+                TTT.step(self, i)
+                if self._isActive:
+                        #opponent's move
+                        TTT.makeMove(self, self.getRandomMove())
+                if self._isActive:
+                        return (self.getState(), 0, False)
+                if self._victor is None:
+                        pt = 0
+                elif self._victor == plr:
+                        pt = 1
+                else:
+                        pt = -1
+
+                return (self.getState(), pt, True)
