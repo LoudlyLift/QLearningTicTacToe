@@ -12,6 +12,9 @@ class TTT:
         0 1 2
         3 4 5
         6 7 8
+
+        reset must be called before the start of the first (and each subsequent)
+        game.
         """
         class IllegalMoveError(Exception):
                 pass
@@ -37,13 +40,14 @@ class TTT:
                             [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]])) for i in range(BOARD_SIZE)
         ]
 
+        """Prepares for the start of a new game"""
         def reset(self, first_player=False):
                 self._board = [None] * TTT.BOARD_SIZE
                 self._next_player = first_player
                 self._played_moves = 0
                 self._isActive = True
                 self._victor = None
-        __init__ = reset
+                return self.get_board()
 
         def __str__(self):
                 return f"{self.__dict__}"
@@ -62,7 +66,7 @@ class TTT:
                 self._played_moves += 1
                 if self._board[i] != None: # illegal moves are suicide
                         self._declare_win(not self._next_player)
-                        return
+                        return (self.get_board(), -10, True)
 
                 self._board[i] = self._next_player
 
@@ -71,14 +75,32 @@ class TTT:
                         values = list(map(lambda i: self._board[i], pattern))
                         if values[0] == values[1] and values[1] == values[2]:
                                 self._declare_win(self._next_player)
-                                return
+                                return (self.get_board(), 1, True)
 
                 # check for stalemate
                 if self._played_moves == TTT.BOARD_SIZE:
                         self._declare_tie()
-                        return
+                        return (self.get_board(), 0.5, True)
 
                 self._next_player = not self._next_player
+
+                return (self.get_board(), 0, False)
+        step = make_move
+
+        def getRandomMove(self, i):
+                assert(self._isActive)
+                num_possible = 9 - self._played_moves
+                assert(num_possible > 0)
+
+                rand_move = numpy.random.randint(num_possible)
+                move = 0
+
+                while rand_move > 0:
+                        move += 1
+                        if self._board[move] is not None:
+                                continue
+                        rand_move -= 1
+                return move
 
         """Returns True if the game has ended. False otherwise."""
         def isOver(self):
@@ -100,9 +122,12 @@ class TTT:
                 assert(self._isActive)
 
 
-        """Returns a list of length nine that represents the board. The value 'None'
-        represents an empty square, while a value of 'True' or 'False'
-        represents a square controlled by the corresponding player.
+        """Returns a list of numbers that represents the state of the game
         """
-        def getBoard(self):
-                return self._board
+        def getState(self):
+                nones  = [ self._board[i] == None  for i in range(TTT.BOARD_SIZE) ]
+                falses = [ self._board[i] == False for i in range(TTT.BOARD_SIZE) ]
+                trues  = [ self._board[i] == True  for i in range(TTT.BOARD_SIZE) ]
+                state = nones + falses + trues # state as booleans
+                state = map(int, state)
+                return state
