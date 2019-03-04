@@ -19,8 +19,12 @@ class neural:
         def __init__(self, state_shape, num_actions):
                 tf.reset_default_graph()
                 self._input = tf.placeholder(shape=[1,neural.NUM_STATES],dtype=tf.float32)
-                W = tf.Variable(tf.random_uniform([neural.NUM_STATES,num_actions],0.01,0.02))
-                self._computedQ = tf.matmul(self._input,W)
+                net = self._input
+
+                #net = tf.layers.dense(net, 20)
+
+                net = tf.layers.dense(net, num_actions)
+                self._computedQ = net
                 self._predict = tf.argmax(self._computedQ,1)
 
                 self._targetQ = tf.placeholder(shape=[1,num_actions],dtype=tf.float32)
