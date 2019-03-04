@@ -138,13 +138,13 @@ class TTT:
         """Returns a list of numbers that represents the state of the game
         """
         def getState(self):
-                #nones  = [ self._board[i] == None  for i in range(TTT.BOARD_SIZE) ]
-                #falses = [ self._board[i] == False for i in range(TTT.BOARD_SIZE) ]
-                #trues  = [ self._board[i] == True  for i in range(TTT.BOARD_SIZE) ]
-                #state = nones + falses + trues # state as booleans
-                #state = map(int, state)
-                #return state
-                return list(map(TTT.playerToInt, self._board))
+                nones  = [ self._board[i] == None  for i in range(TTT.BOARD_SIZE) ]
+                falses = [ self._board[i] == False for i in range(TTT.BOARD_SIZE) ]
+                trues  = [ self._board[i] == True  for i in range(TTT.BOARD_SIZE) ]
+                player = [ self._next_player ]
+                state = nones + falses + trues + player # state as booleans
+                state = list(map(int, state))
+                return state
 
         def printBoard(self, file=sys.stdout):
                 charFromVal = {False: 'F', True: 'T'}

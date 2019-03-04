@@ -6,9 +6,6 @@ import queue
 import overflow_queue
 
 class neural:
-        NUM_STATES=int(math.pow(3,9)) # hardcoded for TTT because it's only
-                                      # temporary until we switch to TF based
-                                      # qtables
         @staticmethod
         def indexFromState(state):
                 state_index = 0
@@ -33,36 +30,35 @@ class neural:
                 self._history = overflow_queue.OverflowQueue(self._config["history_size"])
 
                 tf.reset_default_graph()
-                self._input = tf.placeholder(shape=[None, neural.NUM_STATES],dtype=tf.float32, name="inputs")
+                self._input = tf.placeholder(shape=(None,) + state_shape,dtype=tf.float32, name="inputs")
                 net = self._input
 
-                #net = tf.layers.dense(net, 20)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
 
-                net = tf.layers.dense(net, num_actions, name="outputs")
+                net = tf.layers.dense(net, num_actions, name="outputs", activation=tf.nn.leaky_relu)
                 self._computedQ = net
                 self._targetQ = tf.placeholder(shape=[None, num_actions],dtype=tf.float32, name="targetQ")
 
                 self._loss = tf.losses.mean_squared_error(self._computedQ, self._targetQ)
-                trainer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
+                trainer = tf.train.GradientDescentOptimizer(learning_rate=0.1)
                 self._updateModel = trainer.minimize(self._loss)
 
                 init = tf.global_variables_initializer()
                 self._sess = tf.Session()
                 self._sess.run(init)
 
-                eye = np.identity(neural.NUM_STATES)
-                self._input_vals = [eye[index:index+1][0] for index in range(neural.NUM_STATES)]
-
         def computeQState(self, state):
-                index = neural.indexFromState(state)
-                inp = [self._input_vals[index]]
-                return self._sess.run(self._computedQ, feed_dict={self._input:inp})[0]
+                return self._sess.run(self._computedQ, feed_dict={self._input:[state]})[0]
 
         def updateQState(self, cStep, state, qValues):
                 self._history.addOne((state, qValues))
                 if len(self._history) <= self._config["batch_size"]:
-                        return
-                if cStep % self._config["batch_size"] != 0:
                         return
 
                 data = self._history.sample(self._config["batch_size"])
@@ -70,7 +66,7 @@ class neural:
                 inputs = list(map(lambda tup: tup[0], data))
                 outputs = list(map(lambda tup: tup[1], data))
 
-                inputs = list(map(lambda state: self._input_vals[neural.indexFromState(state)], inputs))
+                #inputs = list(map(lambda state: self._input_vals[neural.indexFromState(state)], inputs))
 
                 #import pdb; pdb.set_trace()
                 self._sess.run(self._updateModel,feed_dict={self._input:inputs,self._targetQ:outputs})
