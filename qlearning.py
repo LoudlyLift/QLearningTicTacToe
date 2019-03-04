@@ -51,28 +51,32 @@ class TFQLearning:
         # Returns (player, [ Σ(episode i's rewards) for i in range(count) ])
         def runEpisodes(self, count=1):
                 reward_sums = []
-                for ep_num in range(count):
-                        state_old = self._env.reset()
-                        reward_sum = 0
-                        done = False
-                        cStep = 0
+                for ep_num in range(1, count+1):
+                        try:
+                                state_old = self._env.reset()
+                                reward_sum = 0
+                                done = False
+                                cStep = 0
 
 
-                        while not done:
-                                allActQs = self._player.computeQState(state_old)
-                                if numpy.random.rand(1) < self._compute_randact(ep_num):
-                                        act = self._env.getRandomMove()
-                                else:
-                                        act = numpy.argmax(allActQs)
-                                state_new,reward,done = self._env.step(act)
-                                maxHypotheticalQ = max(self._player.computeQState(state_new))
-                                allActQs[act] = reward + self._future_discount * maxHypotheticalQ
-                                self._player.updateQState(state_old, allActQs)
+                                while not done:
+                                        allActQs = self._player.computeQState(state_old)
+                                        if numpy.random.rand(1) < self._compute_randact(ep_num):
+                                                act = self._env.getRandomMove()
+                                        else:
+                                                act = numpy.argmax(allActQs)
+                                        state_new,reward,done = self._env.step(act)
+                                        maxHypotheticalQ = max(self._player.computeQState(state_new))
+                                        allActQs[act] = reward + self._future_discount * maxHypotheticalQ
+                                        self._player.updateQState(state_old, allActQs)
 
-                                reward_sum += reward
-                                state_old = state_new
-                                cStep += 1
-                        if (ep_num % 100 == 0 and ep_num != 0):
-                                print("episode %8d: %f" % (ep_num, numpy.mean(reward_sums[-100:-1])))
-                        reward_sums.append(reward_sum)
+                                        reward_sum += reward
+                                        state_old = state_new
+                                        cStep += 1
+                                if (ep_num % 100 == 0 and ep_num != 0):
+                                        print("episode %8d: %f" % (ep_num, numpy.mean(reward_sums[-100:-1])))
+                                reward_sums.append(reward_sum)
+                        except KeyboardInterrupt as e:
+                                print("Keyboard Interrupt")
+                                break
                 return (self._player, reward_sums)

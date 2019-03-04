@@ -1,5 +1,6 @@
 import numpy
 import enum
+import sys
 
 class TTT:
         """A controller for a game of Tic Tac Toe.
@@ -65,9 +66,10 @@ class TTT:
                 if not self._isActive: # should never happen
                         raise IllegalMoveError("Game has already ended")
                 self._played_moves += 1
+                assert(i >= 0 and i < TTT.BOARD_SIZE)
                 if self._board[i] != None: # illegal moves are suicide
                         self._declare_win(not self._next_player)
-                        return (self.getState(), -10, True)
+                        return (self.getState(), -1000, True)
 
                 self._board[i] = self._next_player
 
@@ -81,7 +83,7 @@ class TTT:
                 # check for stalemate
                 if self._played_moves == TTT.BOARD_SIZE:
                         self._declare_tie()
-                        return (self.getState(), 0.5, True)
+                        return (self.getState(), 0, True)
 
                 self._next_player = not self._next_player
 
@@ -93,14 +95,15 @@ class TTT:
                 num_possible = 9 - self._played_moves
                 assert(num_possible > 0)
 
-                rand_move = numpy.random.randint(num_possible)
-                move = 0
+                rand_move = numpy.random.randint(num_possible) + 1
+                move = -1
 
                 while rand_move > 0:
                         move += 1
                         if self._board[move] is not None:
                                 continue
                         rand_move -= 1
+                assert(self._board[move] is None)
                 return move
 
         """Returns True if the game has ended. False otherwise."""
@@ -143,23 +146,43 @@ class TTT:
                 #return state
                 return list(map(TTT.playerToInt, self._board))
 
+        def printBoard(self, file=sys.stdout):
+                charFromVal = {False: 'F', True: 'T'}
+                #                val[0] is index, val[1] is actual value (True/False/None)
+                mapper = lambda val: val[0] if val[1] is None else charFromVal[val[1]]
+                board = list(map(mapper, enumerate(self._board)))
+                print( "┌───┬───┬───┐", file=sys.stdout)
+                print(f"│ {board[0]} │ {board[1]} │ {board[2]} │", file=sys.stdout)
+                print( "├───┼───┼───┤", file=sys.stdout)
+                print(f"│ {board[3]} │ {board[4]} │ {board[5]} │", file=sys.stdout)
+                print( "├───┼───┼───┤", file=sys.stdout)
+                print(f"│ {board[6]} │ {board[7]} │ {board[8]} │", file=sys.stdout)
+                print( "└───┴───┴───┘", file=sys.stdout)
+
+
+
 class TTT_vsRandoAI(TTT):
         def step(self, i):
                 assert(self._isActive)
                 plr = self._next_player
 
                 #AI's move
-                TTT.step(self, i)
-                if self._isActive:
-                        #opponent's move
-                        TTT.makeMove(self, self.getRandomMove())
-                if self._isActive:
-                        return (self.getState(), 0, False)
-                if self._victor is None:
-                        pt = 0
-                elif self._victor == plr:
-                        pt = 1
-                else:
-                        pt = -1
+                state, reward, done = TTT.step(self, i)
+                if done:
+                        return (state, reward, done)
 
-                return (self.getState(), pt, True)
+                #opponent's move
+                assert(self._isActive)
+                mv = self.getRandomMove()
+                state_old = state
+                state, _, done = TTT.makeMove(self, mv)
+                if not done:
+                        return (state, 0, False)
+                assert(self._victor != plr) # assume opponent can't suicide
+
+                if self._victor is None: #tie
+                        pt = 0
+                else: #loss
+                        pt = -100
+
+                return (state, pt, True)
