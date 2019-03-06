@@ -13,10 +13,18 @@ def comp_randact(episode):
         odds = max(odds, 0.01)
         odds = min(odds, 1)
         return odds
+THOUSAND = 1000
+plr_config = {
+        "batch_size": 1 * THOUSAND,
+        "history_size": 1 * THOUSAND,
+        "steps_per_update": 1 * THOUSAND,
+        "train_delay": 1 * THOUSAND,
+        "learning_rate": 0.0001,
+}
 
-controller = ttt.TTT_vsRandoAI()
-qlrn = qlearning.TFQLearning(controller, comp_randact, neural.neural, future_discount=0.5)
-(player, results) = qlrn.runEpisodes(100000)
+controller = ttt.TTT()
+qlrn = qlearning.TFQLearning(controller, comp_randact, neural.neural, future_discount=0.95, player_config=plr_config)
+(player, results) = qlrn.runEpisodes(9223372036854775800)
 
 #Play vs human
 controller = ttt.TTT()

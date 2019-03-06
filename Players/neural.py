@@ -19,6 +19,9 @@ class neural:
         DEFAULT_CONFIG = {
                 "batch_size": 1000, # batch_size == ML batch size; <= history size
                 "history_size": 10000, # number of "Q-rows" to keep around
+                "steps_per_update": 1000, # only do a TF-step once for every this-may new observations
+                "train_delay": 3000,
+                "learning_rate": 0.0001,
         }
 
         def __init__(self, state_shape, num_actions, config=None):
@@ -46,7 +49,7 @@ class neural:
                 self._targetQ = tf.placeholder(shape=[None, num_actions],dtype=tf.float32, name="targetQ")
 
                 self._loss = tf.losses.mean_squared_error(self._computedQ, self._targetQ)
-                trainer = tf.train.GradientDescentOptimizer(learning_rate=0.1)
+                trainer = tf.train.GradientDescentOptimizer(learning_rate=self._config["learning_rate"])
                 self._updateModel = trainer.minimize(self._loss)
 
                 init = tf.global_variables_initializer()
@@ -58,7 +61,7 @@ class neural:
 
         def updateQState(self, cStep, state, qValues):
                 self._history.addOne((state, qValues))
-                if len(self._history) <= self._config["batch_size"]:
+                if cStep % self._config["steps_per_update"] != 0 or len(self._history) < self._config["train_delay"]:
                         return
 
                 data = self._history.sample(self._config["batch_size"])
