@@ -1,4 +1,18 @@
 import numpy
+import math
+
+def bestLegalMove(qvals, legality):
+        actV = -math.inf
+        actI = -1
+        for index, (val, legal) in enumerate(zip(qvals, legality)):
+                if legal and val > actV:
+                        actI = index
+                        actV = val
+        #assert(actI != -1)
+        if actI == -1:
+                import pdb; pdb.set_trace()
+                foo=1+1
+        return actI
 
 class TFQLearning:
         """env must define these methods:
@@ -20,6 +34,10 @@ class TFQLearning:
 
             getNumActions(): returns the number of actions that can be made at
             any given time
+
+            getLegalMoves(): returns a list of length == getNumActions(), whose
+            entries are False if the move is illegal, and true if
+            legal. (Equivalently, could be a list of zero/one)
 
         compute_randact(episode_num): given the episode number, this computes
         probability with which a random move should be made instead of action
@@ -58,22 +76,31 @@ class TFQLearning:
                                 reward_sum = 0
                                 done = False
 
+                                if cStep == 100000:
+                                        import pdb; pdb.set_trace()
+
                                 while not done:
                                         allActQs = self._player.computeQState(state_old)
-                                        if numpy.random.rand(1) < self._compute_randact(ep_num):
+                                        doRandom = numpy.random.rand(1) < self._compute_randact(ep_num)
+                                        if doRandom:
                                                 act = self._env.getRandomMove()
                                         else:
-                                                act = numpy.argmax(allActQs)
+                                                legalMoves = self._env.getLegalMoves()
+                                                act = bestLegalMove(allActQs, legalMoves)
+
                                         state_new,reward,done = self._env.step(act)
-                                        maxHypotheticalQ = max(self._player.computeQState(state_new))
+                                        if done:
+                                                maxHypotheticalQ = 0
+                                        else:
+                                                qvals = self._player.computeQState(state_new)
+                                                legalMoves = self._env.getLegalMoves()
+                                                maxHypotheticalQ = bestLegalMove(qvals, legalMoves)
                                         allActQs[act] = reward + self._future_discount * maxHypotheticalQ
                                         self._player.updateQState(cStep, state_old, allActQs)
 
                                         reward_sum += reward
                                         state_old = state_new
                                         cStep += 1
-                                if (ep_num % 100 == 0 and ep_num != 0):
-                                        print("episode %8d: %f" % (ep_num, numpy.mean(reward_sums[-100:-1])))
                                 reward_sums.append(reward_sum)
                         except KeyboardInterrupt as e:
                                 print("Keyboard Interrupt")

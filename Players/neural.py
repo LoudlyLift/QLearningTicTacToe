@@ -36,13 +36,9 @@ class neural:
                 self._input = tf.placeholder(shape=(None,) + state_shape,dtype=tf.float32, name="inputs")
                 net = self._input
 
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
-                net = tf.layers.dense(net, 20, activation=tf.nn.leaky_relu)
+                vsi=tf.contrib.layers.variance_scaling_initializer
+
+                net = tf.layers.dense(net, 300, activation=tf.nn.leaky_relu, kernel_initializer=vsi(), bias_initializer=vsi())
 
                 net = tf.layers.dense(net, num_actions, name="outputs", activation=tf.nn.leaky_relu)
                 self._computedQ = net
@@ -72,7 +68,8 @@ class neural:
                 #inputs = list(map(lambda state: self._input_vals[neural.indexFromState(state)], inputs))
 
                 #import pdb; pdb.set_trace()
-                self._sess.run(self._updateModel,feed_dict={self._input:inputs,self._targetQ:outputs})
+                loss, _ = self._sess.run([self._loss, self._updateModel],feed_dict={self._input:inputs,self._targetQ:outputs})
+                print("cstep %12d's loss: %f" % (cStep, loss))
 
         def close(self):
                 self._sess.close()

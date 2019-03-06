@@ -62,31 +62,28 @@ class TTT:
                 self._isActive = False
                 self._victor = None
 
-        def makeMove(self, i):
-                if not self._isActive: # should never happen
-                        raise IllegalMoveError("Game has already ended")
-                self._played_moves += 1
-                assert(i >= 0 and i < TTT.BOARD_SIZE)
-                if self._board[i] != None: # illegal moves are suicide
-                        self._declare_win(not self._next_player)
-                        return (self.getState(), -1000, True)
+        def getLegalMoves(self):
+                return list(map(lambda v: v is None, self._board))
 
+        def makeMove(self, i):
+                assert(self._isActive)
+                assert(self._board[i] == None)
                 self._board[i] = self._next_player
+                self._played_moves += 1
 
                 # check for victory
                 for pattern in TTT.WIN_PATTERNS[i]:
                         values = list(map(lambda i: self._board[i], pattern))
                         if values[0] == values[1] and values[1] == values[2]:
                                 self._declare_win(self._next_player)
-                                return (self.getState(), 1, True)
+                                return (self.getState(), 1000, True)
 
-                # check for stalemate
+                # check for stalemate / tie
                 if self._played_moves == TTT.BOARD_SIZE:
                         self._declare_tie()
-                        return (self.getState(), 0, True)
+                        return (self.getState(), 500, True)
 
                 self._next_player = not self._next_player
-
                 return (self.getState(), 0, False)
         step = makeMove
 
@@ -174,15 +171,18 @@ class TTT_vsRandoAI(TTT):
                 #opponent's move
                 assert(self._isActive)
                 mv = self.getRandomMove()
-                state_old = state
+
                 state, _, done = TTT.makeMove(self, mv)
                 if not done:
                         return (state, 0, False)
-                assert(self._victor != plr) # assume opponent can't suicide
+                #assert(self._victor != plr) # assume opponent can't suicide
+                if not (self._victor != plr): # assume opponent can't suicide
+                        import pdb; pdb.set_trace()
+                        foo = 1+1
 
                 if self._victor is None: #tie
-                        pt = 0
+                        pt = 500
                 else: #loss
-                        pt = -100
+                        pt = -1000
 
                 return (state, pt, True)
