@@ -40,7 +40,7 @@ class neural:
 
                 net = tf.layers.dense(net, 300, activation=tf.nn.leaky_relu, kernel_initializer=vsi(), bias_initializer=vsi())
 
-                net = tf.layers.dense(net, num_actions, name="outputs", activation=tf.nn.leaky_relu)
+                net = tf.layers.dense(net, num_actions, name="outputs", activation=tf.nn.leaky_relu, kernel_initializer=vsi(), bias_initializer=vsi())
                 self._computedQ = net
                 self._targetQ = tf.placeholder(shape=[None, num_actions],dtype=tf.float32, name="targetQ")
 
