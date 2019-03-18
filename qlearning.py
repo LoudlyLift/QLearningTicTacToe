@@ -76,9 +76,6 @@ class TFQLearning:
                                 reward_sum = 0
                                 done = False
 
-                                if cStep == 100000:
-                                        import pdb; pdb.set_trace()
-
                                 while not done:
                                         allActQs = self._player.computeQState(state_old)
                                         doRandom = numpy.random.rand(1) < self._compute_randact(ep_num)
