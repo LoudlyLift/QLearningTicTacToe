@@ -44,7 +44,7 @@ class neural:
                 self._computedQ = net
                 self._targetQ = tf.placeholder(shape=[None, num_actions],dtype=tf.float32, name="targetQ")
 
-                self._loss = tf.losses.huber_loss(self._targetQ, self._computedQ)
+                self._loss = tf.losses.huber_loss(self._targetQ, self._computedQ, delta=10.0)
                 trainer = tf.train.GradientDescentOptimizer(learning_rate=self._config["learning_rate"])
                 self._updateModel = trainer.minimize(self._loss)
 
