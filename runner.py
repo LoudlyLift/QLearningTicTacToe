@@ -25,7 +25,7 @@ plr_config = {
 
 controller = ttt.TTT_vsRandoAI()
 qlrn = qlearning.TFQLearning(controller, comp_randact, neural.neural, future_discount=0.75, player_config=plr_config)
-(player, results) = qlrn.runEpisodes(9223372036854775800)
+(player, results) = qlrn.runEpisodes(200000)
 
 #Play vs human
 controller = ttt.TTT()
